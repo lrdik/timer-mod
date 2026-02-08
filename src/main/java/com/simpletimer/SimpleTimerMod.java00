@@ -1,0 +1,66 @@
+package com.simpletimer;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.client.event.RenderGameOverlayEvent;
+import org.lwjgl.input.Keyboard;
+
+@Mod(modid = "simpletimer", version = "1.0")
+public class SimpleTimerMod {
+    
+    public static KeyBinding toggleKey;
+    public static KeyBinding resetKey;
+    private long startTime = 0;
+    private long accumulatedTime = 0;
+    private boolean isRunning = false;
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        toggleKey = new KeyBinding("Timer Pause", Keyboard.KEY_P, "Simple Timer");
+        resetKey = new KeyBinding("Timer Reset", Keyboard.KEY_R, "Simple Timer");
+        ClientRegistry.registerKeyBinding(toggleKey);
+        ClientRegistry.registerKeyBinding(resetKey);
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onKeyInput(InputEvent.KeyInputEvent event) {
+        if (toggleKey.isPressed()) {
+            if (isRunning) {
+                accumulatedTime += System.currentTimeMillis() - startTime;
+                isRunning = false;
+            } else {
+                startTime = System.currentTimeMillis();
+                isRunning = true;
+            }
+        }
+        if (resetKey.isPressed()) {
+            isRunning = false;
+            accumulatedTime = 0;
+            startTime = 0;
+        }
+    }
+
+    @SubscribeEvent
+    public void onRenderOverlay(RenderGameOverlayEvent.Post event) {
+        if (event.type != RenderGameOverlayEvent.ElementType.TEXT) return;
+        
+        long timeToDisplay = accumulatedTime;
+        if (isRunning) {
+            timeToDisplay += System.currentTimeMillis() - startTime;
+        }
+
+        long minutes = (timeToDisplay / 60000);
+        long seconds = (timeToDisplay / 1000) % 60;
+        long millis = timeToDisplay % 1000;
+
+        String text = String.format("Timer: %02d:%02d.%03d", minutes, seconds, millis);
+        Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(text, 10, 10, 0xFFFFFF);
+    }
+}

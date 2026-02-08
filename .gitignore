@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+build/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+bin/
+
+# Minecraft
+run/
+usercache.json
+usernamecache.json
